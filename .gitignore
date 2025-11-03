@@ -1,3 +1,8 @@
+# Bỏ qua thư mục data và các file bên trong
+data/
+!data/.gitkeep
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
