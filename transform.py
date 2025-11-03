@@ -53,6 +53,7 @@ def clean_and_transform(data):
         cleaned.append(tx)
 
     print(f" Sau khi làm sạch: còn {len(cleaned)} giao dịch hợp lệ.")
+    cleaned.sort(key=lambda x: x["timeStamp"] or "", reverse=True)
     return cleaned
 
 
