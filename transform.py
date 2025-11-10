@@ -1,6 +1,6 @@
 import os
 import json
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from decimal import Decimal
 
 # Đường dẫn thư mục dữ liệu
@@ -25,6 +25,11 @@ def clean_and_transform(data):
     cleaned = []
     seen_hashes = set()
 
+    # === THÊM DÒNG NÀY ===
+    # Định nghĩa múi giờ UTC+7 (Giờ Việt Nam)
+    local_timezone = timezone(timedelta(hours=7))
+    # ====================
+
     for tx in data:
         if tx.get("isError") == "1":
             continue
@@ -35,10 +40,22 @@ def clean_and_transform(data):
 
         seen_hashes.add(tx_hash)
 
+        # === THAY ĐỔI KHỐI CODE NÀY ===
         try:
-            tx["timeStamp"] = datetime.fromtimestamp(int(tx["timeStamp"])).isoformat()
+            # 1. Lấy timestamp gốc (là UTC)
+            utc_timestamp_int = int(tx["timeStamp"])
+            
+            # 2. Tạo đối tượng datetime, chỉ định rõ nó là UTC
+            utc_dt = datetime.fromtimestamp(utc_timestamp_int, tz=timezone.utc)
+            
+            # 3. Chuyển đổi nó sang múi giờ địa phương (UTC+7)
+            local_dt = utc_dt.astimezone(local_timezone)
+            
+            # 4. Lưu dưới dạng ISO string (bây giờ sẽ là 22:16:29...)
+            tx["timeStamp"] = local_dt.isoformat()
         except Exception:
             tx["timeStamp"] = None
+        # === KẾT THÚC THAY ĐỔI ===
 
         try:
             tx["value_Ether"] = float(Decimal(tx["value"]) / Decimal(1e18))
@@ -59,48 +76,80 @@ def clean_and_transform(data):
 
 def split_into_tables(clean_data):
     """
-    Chia dữ liệu thành nhiều bảng (dạng JSON riêng)
+    Chia dữ liệu thành 5 bảng (dạng JSON riêng)
     """
     transactions = []
     addresses = set()
     gas_info = []
+    contracts = []       
+    function_calls = []  
 
     for tx in clean_data:
-        # Bảng giao dịch chính
+        tx_hash = tx.get("hash")
+        
+        # 1. Bảng giao dịch chính (Thêm blockNumber và status)
         transactions.append({
-            "hash": tx.get("hash"),
+            "hash": tx_hash,
             "from": tx.get("from"),
             "to": tx.get("to"),
             "value_Ether": tx.get("value_Ether"),
             "timeStamp": tx.get("timeStamp"),
+            "blockNumber": tx.get("blockNumber"),          
+            "txreceipt_status": tx.get("txreceipt_status") 
         })
 
-        # Bảng địa chỉ
+        # 2. Bảng địa chỉ (không đổi)
         if tx.get("from"):
             addresses.add(tx["from"])
         if tx.get("to"):
             addresses.add(tx["to"])
 
-        # Bảng gas
+        # 3. Bảng gas (không đổi)
         gas_info.append({
-            "hash": tx.get("hash"),
+            "hash": tx_hash,
             "gas": tx.get("gas"),
             "gasUsed": tx.get("gasUsed"),
             "gasPrice_Gwei": tx.get("gasPrice_Gwei")
         })
 
-    # Lưu thành file riêng
+        # 4. Bảng contracts (MỚI)
+        # Chỉ thêm nếu 'contractAddress' có giá trị (tức là giao dịch này tạo ra 1 contract)
+        contract_addr = tx.get("contractAddress")
+        if contract_addr and contract_addr != "": 
+            contracts.append({
+                "hash": tx_hash,
+                "contract_address": contract_addr
+            })
+
+        # 5. Bảng function_calls (MỚI)
+        # Chỉ thêm nếu 'functionName' có giá trị (tức là 1 tương tác với contract)
+        func_name = tx.get("functionName")
+        if func_name and func_name != "":
+            function_calls.append({
+                "hash": tx_hash,
+                "function_name": func_name,
+                "method_id": tx.get("methodId")
+            })
+
+    # Lưu thành 5 file riêng
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    with open(os.path.join(SPLIT_DIR, f"transactions_{timestamp}.json"), "w", encoding="utf-8") as f:
-        json.dump(transactions, f, indent=4, ensure_ascii=False)
+    
+    # Hàm phụ trợ để lưu file
+    def save_split_file(data, name, ts):
+        if not data: # Không lưu file rỗng
+            print(f"⚠️ Bỏ qua file {name} vì không có dữ liệu.")
+            return
+        filepath = os.path.join(SPLIT_DIR, f"{name}_{ts}.json")
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4, ensure_ascii=False)
 
-    with open(os.path.join(SPLIT_DIR, f"addresses_{timestamp}.json"), "w", encoding="utf-8") as f:
-        json.dump(sorted(list(addresses)), f, indent=4, ensure_ascii=False)
+    save_split_file(transactions, "transactions", timestamp)
+    save_split_file(sorted(list(addresses)), "addresses", timestamp)
+    save_split_file(gas_info, "gas_info", timestamp)
+    save_split_file(contracts, "contracts", timestamp)           # <-- LƯU FILE MỚI
+    save_split_file(function_calls, "function_calls", timestamp) # <-- LƯU FILE MỚI
 
-    with open(os.path.join(SPLIT_DIR, f"gas_info_{timestamp}.json"), "w", encoding="utf-8") as f:
-        json.dump(gas_info, f, indent=4, ensure_ascii=False)
-
-    print(f"✅ Đã chia dữ liệu thành 3 bảng: transactions, addresses, gas_info")
+    print(f"✅ Đã chia dữ liệu thành 5 bảng: transactions, addresses, gas_info, contracts, function_calls")
 
 
 def save_clean_data(data):

@@ -19,7 +19,7 @@ DATA_DIR = os.path.join(os.path.dirname(__file__), "data", "raw")
 os.makedirs(DATA_DIR, exist_ok=True)
 
 
-def get_transactions(address, start_block=0, end_block=99999999, sort="asc", chainid=None):
+def get_transactions(address, start_block=0, end_block=99999999, sort="desc", chainid=None):
     """
     Lấy danh sách giao dịch của một địa chỉ Ethereum từ Etherscan API (v2).
     """
@@ -65,7 +65,7 @@ def save_raw_data(address, data):
 
 if __name__ == "__main__":
     # Ví dụ địa chỉ ví (bạn có thể thay)
-    example_address = "0xde0B295669a9FD93d5F28D9Ec85E40f4cb697BAe"
+    example_address = "0xdac17f958d2ee523a2206206994597c13d831ec7"
 
     try:
         print("⏳ Đang tải dữ liệu từ Etherscan...")
