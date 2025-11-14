@@ -1,0 +1,10 @@
+{"timestamp":"2025-11-12T16:42:13.736543Z","level":"info","event":"DAG bundles loaded: dags-folder, example_dags","logger":"airflow.dag_processing.bundles.manager.DagBundlesManager","filename":"manager.py","lineno":179}
+{"timestamp":"2025-11-12T16:42:13.738304Z","level":"info","event":"Filling up the DagBag from /opt/airflow/dags/blockchain_dag.py","logger":"airflow.models.dagbag.DagBag","filename":"dagbag.py","lineno":593}
+{"timestamp":"2025-11-12T16:42:13.772785Z","level":"warning","event":"The `airflow.operators.bash.BashOperator` attribute is deprecated. Please use `'airflow.providers.standard.operators.bash.BashOperator'`.","category":"DeprecatedImportWarning","filename":"/opt/airflow/dags/blockchain_dag.py","lineno":4,"logger":"py.warnings"}
+{"timestamp":"2025-11-12T16:42:13.854804Z","level":"info","event":"Task instance is in running state","logger":"task.stdout"}
+{"timestamp":"2025-11-12T16:42:13.855058Z","level":"info","event":" Previous state of the Task instance: TaskInstanceState.QUEUED","logger":"task.stdout"}
+{"timestamp":"2025-11-12T16:42:13.855239Z","level":"info","event":"Current task name:load_data","logger":"task.stdout"}
+{"timestamp":"2025-11-12T16:42:13.855317Z","level":"info","event":"Dag name:etherscan_docker_etl_pipeline","logger":"task.stdout"}
+{"timestamp":"2025-11-12T16:42:13.851118Z","level":"info","event":"Tmp dir root location: /tmp","logger":"airflow.task.hooks.airflow.providers.standard.hooks.subprocess.SubprocessHook","filename":"subprocess.py","lineno":78}
+{"timestamp":"2025-11-12T16:42:13.854282Z","level":"info","event":"Running command: ['/usr/bin/bash', '-c', 'cd /opt/airflow/scripts && python load.py']","logger":"airflow.task.hooks.airflow.providers.standard.hooks.subprocess.SubprocessHook","filename":"subprocess.py","lineno":88}
+{"timestamp":"2025-11-12T16:42:13.892989Z","level":"info","event":"Output:","logger":"airflow.task.hooks.airflow.providers.standard.hooks.subprocess.SubprocessHook","filename":"subprocess.py","lineno":99}
