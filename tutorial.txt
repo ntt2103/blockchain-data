@@ -1,3 +1,0 @@
-tạo 1 file tên .env trong thư mục file, sau đó dán đoạn dưới vào: 
-
-ETHERSCAN_API_KEY = TXCARCDEGTMWX4UIX78WIGFF3TXMDH65VU
